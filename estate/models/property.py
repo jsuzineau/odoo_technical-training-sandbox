@@ -1,4 +1,4 @@
-from odoo import api,fields, models
+from odoo import api,fields, models, exceptions
 
 class Property(models.Model):
     _name= "estate.property"
@@ -14,7 +14,17 @@ class Property(models.Model):
     living_area       = fields.Integer(string="Living area(sqm)")
     facades           = fields.Integer()
     garage            = fields.Boolean()
+
     garden            = fields.Boolean()
+    @api.onchange("garden")
+    def _onchange_garden(self):
+        if self.garden:
+            self.garden_area= 10
+            self.garden_orientation=Property.garden_orientation.north
+        else:
+            self.garden_area= 0
+            self.garden_orientation=None
+
     garden_area       = fields.Integer(string="Garden area(sqm)")
     garden_orientation= fields.Selection(
         string='Garden Orientation',
@@ -25,6 +35,33 @@ class Property(models.Model):
          ('west' ,'West' )
          ],
         help="Type is used to define orientation")
+
+    active= fields.Boolean(default=True)
+    state= fields.Selection(
+        string='Status',
+        default='new',
+        selection=[
+            ('new'           ,'New           '),
+            ('offer_received','Offer Received'),
+            ('offer_accepted','Offer Accepted'),
+            ('sold'          ,'Sold          '),
+            ('canceled'      ,'Canceled      ')
+            ],
+        help="Type is used to define status")
+    def action_Sold(self):
+        for record in self:
+            if "canceled" == record.state :
+                raise exceptions.UserError("Canceled properties cannot be sold")
+            else:
+              record.state= "sold"
+        return True
+    def action_Canceled(self):
+        for record in self:
+            if "sold" == record.state :
+                raise exceptions.UserError("Sold properties cannot be Canceled")
+            else:
+              record.state= "canceled"
+        return True
     property_type_id= fields.Many2one("estate.property.type", string="Property type")
     salesman_id = fields.Many2one('res.users', index=True, tracking=True, default=lambda self: self.env.user)
     buyer_id=fields.Many2one('res.partner', index=True, tracking=True)
@@ -47,7 +84,5 @@ class Property(models.Model):
                 record.best_price = min(record.offer_ids.mapped('price'))
             else:
                 record.best_price = ""
-
     best_price = fields.Float(compute="_compute_best_price", string="Best Offer")
-
 

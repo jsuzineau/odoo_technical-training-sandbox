@@ -1,5 +1,6 @@
 {
 'name':"estate",
+'license':"LGPL-3",
 'version': '1.0',
 'description':"Real estate",
 'depends':['base'],

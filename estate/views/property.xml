@@ -26,8 +26,9 @@
         <field name="arch" type="xml">
             <form string="My new house">
                 <header>
-                    <button name="action_Sold"     type="object" string="Sold"  />
-                    <button name="action_Canceled" type="object" string="Cancel"/>
+                    <button type="object" name="action_Sold"                   string="Sold"  />
+                    <button type="object" name="action_Canceled"               string="Cancel"/>
+                    <button type="action" name="%(estate.report_action_property_offers)d" string="Print"/>
                 </header>
                 <sheet>
                     <h1>
